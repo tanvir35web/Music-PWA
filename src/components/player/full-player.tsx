@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import {
   ChevronDown,
   Ellipsis,
@@ -15,8 +15,6 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
-  Volume1,
-  Volume2,
 } from "lucide-react";
 import type { RepeatMode } from "@/types/player";
 import { Button, IconButton } from "@/components/ui/button";
@@ -25,7 +23,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { openTrackMenu } from "@/components/library/track-menu";
 import { player, useCurrentTrack, usePlayerState } from "@/hooks/use-player";
 import { toggleFavorite } from "@/lib/library/actions";
-import { getPlayer } from "@/lib/audio/player";
 import { runAction } from "@/lib/utils/errors";
 import { cn } from "@/lib/utils/cn";
 import { PlayButton } from "./play-button";
@@ -41,13 +38,6 @@ const REPEAT_LABEL: Record<RepeatMode, string> = {
   one: "Repeat one",
 };
 
-const noopSubscribe = () => () => {};
-
-/** iOS ignores programmatic volume changes; hide the slider there. */
-function useCanSetVolume(): boolean {
-  return useSyncExternalStore(noopSubscribe, () => getPlayer().canSetVolume, () => false);
-}
-
 function nextSpeed(current: number): number {
   const index = SPEEDS.findIndex((s) => Math.abs(s - current) < 0.01);
   return SPEEDS[(index + 1) % SPEEDS.length];
@@ -56,9 +46,8 @@ function nextSpeed(current: number): number {
 export function FullPlayer() {
   const router = useRouter();
   const track = useCurrentTrack();
-  const { isPlaying, repeatMode, shuffle, playbackRate, volume, error } = usePlayerState();
+  const { isPlaying, repeatMode, shuffle, playbackRate, error } = usePlayerState();
   const [queueOpen, setQueueOpen] = useState(false);
-  const canSetVolume = useCanSetVolume();
 
   const close = () => {
     if (window.history.length > 1) router.back();
@@ -187,25 +176,6 @@ export function FullPlayer() {
               )}
             </IconButton>
           </div>
-
-          {canSetVolume && (
-            <div className="mt-4 flex items-center gap-2 text-muted">
-              <Volume1 aria-hidden className="size-5 shrink-0" />
-              <input
-                type="range"
-                className="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={volume}
-                aria-label="Volume"
-                aria-valuetext={`${Math.round(volume * 100)}%`}
-                style={{ ["--fill" as string]: `${volume * 100}%` }}
-                onChange={(e) => player.setVolume(Number(e.target.value))}
-              />
-              <Volume2 aria-hidden className="size-5 shrink-0" />
-            </div>
-          )}
         </>
       )}
 

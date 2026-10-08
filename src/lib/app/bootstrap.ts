@@ -31,7 +31,6 @@ async function initialise(): Promise<void> {
   applyTheme(settings.theme);
   engine.setRepeatMode(settings.repeatMode);
   engine.setShuffle(settings.shuffle);
-  engine.setVolume(settings.volume);
   engine.setPlaybackRate(settings.playbackRate);
   engine.setAutoplay(settings.autoplay);
   engine.setPreferTrackButtons(settings.preferTrackButtons);
@@ -63,7 +62,6 @@ function persistPlayerState(): void {
     const patch: Partial<AppSettings> = {};
     if (state.repeatMode !== previous.repeatMode) patch.repeatMode = state.repeatMode;
     if (state.shuffle !== previous.shuffle) patch.shuffle = state.shuffle;
-    if (state.volume !== previous.volume) patch.volume = state.volume;
     if (state.playbackRate !== previous.playbackRate) patch.playbackRate = state.playbackRate;
     if (state.currentTrackId !== previous.currentTrackId) {
       patch.lastTrackId = state.currentTrackId;

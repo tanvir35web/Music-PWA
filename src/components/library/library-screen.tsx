@@ -1,39 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowUpDown, Music, Search, Shuffle, X } from "lucide-react";
-import type { TrackSort } from "@/types/track";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Music, Search, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
-import { Segmented } from "@/components/ui/segmented";
 import { InstallHint } from "@/components/pwa/install-hint";
-import { useLibrary, useLibraryView, type LibraryFilter } from "@/hooks/use-library";
-import { player } from "@/hooks/use-player";
-import { recentlyPlayed } from "@/lib/library/query";
-import { RecentlyPlayed } from "./recently-played";
+import { useLibrary, useLibraryView } from "@/hooks/use-library";
 import { TrackList } from "./track-list";
-
-const SORT_OPTIONS: ReadonlyArray<{ value: TrackSort; label: string }> = [
-  { value: "recent", label: "Recently added" },
-  { value: "title", label: "Title" },
-  { value: "artist", label: "Artist" },
-];
-
-const FILTER_OPTIONS: ReadonlyArray<{ value: LibraryFilter; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "favorites", label: "Favourites" },
-  { value: "recent", label: "Recent" },
-];
 
 export function LibraryScreen() {
   const { items, status } = useLibrary();
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<TrackSort>("recent");
-  const [filter, setFilter] = useState<LibraryFilter>("all");
-  const tracks = useLibraryView(query, sort, filter);
-  const recent = useMemo(() => recentlyPlayed(items, 10), [items]);
+  const tracks = useLibraryView(query, "recent");
 
   const count = items.length;
   const subtitle =
@@ -60,7 +39,7 @@ export function LibraryScreen() {
         />
       ) : (
         <>
-          <div className="px-safe mt-3 flex flex-col gap-3">
+          <div className="px-safe mt-3">
             <div className="relative">
               <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
               <input
@@ -84,47 +63,11 @@ export function LibraryScreen() {
                 </button>
               )}
             </div>
-            <Segmented label="Show" value={filter} options={FILTER_OPTIONS} onChange={setFilter} />
-            <div className="flex items-center gap-2">
-              <Button
-                variant="primary"
-                className="flex-1"
-                disabled={tracks.length === 0}
-                onClick={() => player.playQueue(tracks.map((t) => t.id), { shuffle: true })}
-              >
-                <Shuffle aria-hidden className="size-4" /> Shuffle
-              </Button>
-              {filter !== "recent" && (
-                <label className="relative flex min-h-11 flex-1 items-center gap-2 rounded-xl bg-surface-2 px-3 text-[15px] font-semibold">
-                  <ArrowUpDown aria-hidden className="size-4 text-muted" />
-                  <span className="sr-only">Sort by</span>
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as TrackSort)}
-                    className="w-full appearance-none bg-transparent outline-none"
-                  >
-                    {SORT_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </div>
           </div>
-
-          {filter === "all" && !query && recent.length > 0 && <RecentlyPlayed tracks={recent} />}
 
           <section aria-label="Songs" className="mt-2">
             {tracks.length === 0 && status === "ready" ? (
-              <p className="px-safe py-10 text-center text-sm text-muted">
-                {query
-                  ? `No songs match "${query}".`
-                  : filter === "favorites"
-                    ? "Tap the heart on a song to add it to Favourites."
-                    : "Songs you play will appear here."}
-              </p>
+              <p className="px-safe py-10 text-center text-sm text-muted">No songs match &quot;{query}&quot;.</p>
             ) : (
               <TrackList tracks={tracks} label="Songs" />
             )}
